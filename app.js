@@ -45,18 +45,19 @@ app.post("/createuser",function(req,res){
   res.render("newuser",{success:""});
 });
 app.post("/updateform",function(req,res){
-    const user=new User({
-      name:req.body.newuser[0],
-      mnumber:req.body.newuser[2],
-      email:req.body.newuser[1],
-      credits:req.body.newuser[3]
-    });
-    //dummyUsers.push(user);
-    user.save(function(err,res){
+    const temp=[
+      {
+        name:req.body.newuser[0],
+        mnumber:req.body.newuser[2],
+        email:req.body.newuser[1],
+        credits:req.body.newuser[3]
+      }
+    ]
+    User.insertMany(temp,function(err,res){
       if(err){
         console.log(err);
       }else{
-        console.log("saved");
+        console.log(res);
       }
     });
     res.render("newuser",{success:"user registered successfully!"});
@@ -74,6 +75,7 @@ app.post("/sendmoney",function(req,res){
     if(err){
       console.log(err);
     }else if(resp[0]==undefined){
+      console.log(resp);
       res.render("transfermoney",{message:"user does not exist!.Please enter valid details."});
     }
     else{
@@ -81,14 +83,18 @@ app.post("/sendmoney",function(req,res){
       User.find({name:receivername,email:receiveremail},function(err,r){
         if(err){
           console.log(err);
-        }else if(r[0]==undefined){
+        }else if(r[0]==undefined) {
+          console.log(2);
             res.render("transfermoney",{message:"user does not exist!.Please enter valid details."});
         }else if(check<amount){
           res.render("transfermoney",{message:"Sorry! Insufficient Balance"})
         }else{
+          console.log(r);
+          console.log(resp);
           var updatedamt1=parseInt(resp[0].credits)-amount;
           User.findByIdAndUpdate({_id:resp[0]._id},{credits:updatedamt1},function(err,result){
             if(err){
+              console.log(3);
               res.render("transfermoney",{message:"user does not exist!.Please enter valid details."});
             }else{
               console.log("updated");
@@ -97,11 +103,13 @@ app.post("/sendmoney",function(req,res){
           var updatedamt2=parseInt(r[0].credits)+amount;
           User.findByIdAndUpdate({_id:r[0]._id},{credits:updatedamt2},function(err,result){
             if(err){
+              console.log(2);
               res.render("transfermoney",{message:"user does not exist!.Please enter valid details"});
             }else{
               console.log("updated");
             }
           });
+          res.render("transfermoney",{message:"Congratulations! Transaction Successful"});
           let date=new Date();
           const currdate=date.toLocaleDateString('en-GB');
           const currtime=date.toLocaleTimeString('en-US');
@@ -115,9 +123,8 @@ app.post("/sendmoney",function(req,res){
             time:currtime}]
           });
           th1.save();
-         }
+        }
       });
-      res.render("transfermoney",{message:"Congratulations! Transaction Successful"});
     }
   });
 });
@@ -131,11 +138,12 @@ app.post("/showhistory",function(req,res){
   History.find({fromname:name,fromemail:email},function(err,response){
     if(err){
       console.log(err);
-    }else if(response==null){
+    }else if(response.length==0){
       History.find({toname:name,toemail:email},function(err,resp){
         if(err){
           console.log(err);
         }else if(resp.length==0){
+          console.log(1);
           res.render("history",{t:transaction,m:"Sorry! No transaction found",flag:1});
         }else{
           transaction.push(resp);
@@ -148,7 +156,14 @@ app.post("/showhistory",function(req,res){
         if(err){
           console.log(err);
         }else if(respo.length==0){
-          res.render("history",{t:transaction,m:"Sorry! No transaction found",flag:1});
+          if(transaction.length>0){
+            res.render("history",{t:transaction,m:"",flag:0});
+          }
+          else{
+            res.render("history",{t:transaction,m:"Sorry! No transaction found",flag:1});
+          }
+          console.log(2);
+          res.render("history",{t:transaction,m:"",flag:0});
         }else{
           transaction.push(respo);
           res.render("history",{t:transaction,m:"",flag:0});
