@@ -162,8 +162,6 @@ app.post("/showhistory",function(req,res){
           else{
             res.render("history",{t:transaction,m:"Sorry! No transaction found",flag:1});
           }
-          console.log(2);
-          res.render("history",{t:transaction,m:"",flag:0});
         }else{
           transaction.push(respo);
           res.render("history",{t:transaction,m:"",flag:0});
